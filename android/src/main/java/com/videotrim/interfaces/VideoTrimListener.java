@@ -6,7 +6,7 @@ import com.videotrim.enums.ErrorCode;
 public interface VideoTrimListener {
   void onLoad(int duration);
   void onTrimmingProgress(int percentage);
-  void onFinishTrim(String url, long startMs, long endMs, int videoDuration);
+  void onFinishTrim(String url, long startMs, long endMs, int videoDuration, boolean openTrimmedVideo);
   void onCancelTrim();
   void onError(String errorMessage, ErrorCode errorCode);
   void onCancel();

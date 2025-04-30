@@ -46,6 +46,24 @@ class VideoTrimmerThumb: UIView {
         return view
     }()
 
+    public var leadingViewHidden: Bool {
+        get { leadingView.isHidden }
+        set { 
+                leadingView.isHidden = newValue 
+                topView.isHidden = newValue
+                bottomView.isHidden = newValue
+            }
+    }
+
+    public var trailingViewHidden: Bool {
+        get { trailingView.isHidden }
+        set { 
+                trailingView.isHidden = newValue
+                topView.isHidden = newValue
+                bottomView.isHidden = newValue 
+            }
+    }
+
     private let topView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false

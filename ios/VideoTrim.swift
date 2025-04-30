@@ -136,7 +136,9 @@ class VideoTrim: RCTEventEmitter, AssetLoaderDelegate, UIDocumentPickerDelegate 
       guard let vc = self.vc else { return }
       
       vc.configure(config: config)
-      
+      vc.shareBtnClicked = {
+          self.emitEventToJS("onSharePress", eventData: nil)
+      }
       vc.cancelBtnClicked = {
         if !self.enableCancelDialog {
           self.emitEventToJS("onCancel", eventData: nil)
@@ -175,9 +177,9 @@ class VideoTrim: RCTEventEmitter, AssetLoaderDelegate, UIDocumentPickerDelegate 
         }
       }
       
-      vc.saveBtnClicked = {(selectedRange: CMTimeRange) in
+      vc.saveBtnClicked = {(selectedRange: CMTimeRange, , openTrimmedVideo: Bool) in
         if !self.enableSaveDialog {
-          self.trim(viewController: vc,inputFile: destPath, videoDuration: self.vc!.asset!.duration.seconds, startTime: selectedRange.start.seconds, endTime: selectedRange.end.seconds)
+          self.trim(viewController: vc,inputFile: destPath, videoDuration: self.vc!.asset!.duration.seconds, startTime: selectedRange.start.seconds, endTime: selectedRange.end.seconds, openTrimmedVideo:openTrimmedVideo)
           return
         }
         
@@ -187,7 +189,7 @@ class VideoTrim: RCTEventEmitter, AssetLoaderDelegate, UIDocumentPickerDelegate 
         
         // Create OK button with action handler
         let ok = UIAlertAction(title: self.saveDialogConfirmText, style: .default, handler: { (action) -> Void in
-          self.trim(viewController: vc,inputFile: destPath, videoDuration: vc.asset!.duration.seconds, startTime: selectedRange.start.seconds, endTime: selectedRange.end.seconds)
+          self.trim(viewController: vc,inputFile: destPath, videoDuration: vc.asset!.duration.seconds, startTime: selectedRange.start.seconds, endTime: selectedRange.end.seconds, openTrimmedVideo:openTrimmedVideo)
         })
         
         // Create Cancel button with action handlder
@@ -320,7 +322,7 @@ class VideoTrim: RCTEventEmitter, AssetLoaderDelegate, UIDocumentPickerDelegate 
     }
   }
   
-  private func trim(viewController: VideoTrimmerViewController, inputFile: URL, videoDuration: Double, startTime: Double, endTime: Double) {
+  private func trim(viewController: VideoTrimmerViewController, inputFile: URL, videoDuration: Double, startTime: Double, endTime: Double, openTrimmedVideo:Bool) {
     vc?.pausePlayer()
     
     // Generate output file URL
@@ -450,7 +452,8 @@ class VideoTrim: RCTEventEmitter, AssetLoaderDelegate, UIDocumentPickerDelegate 
           "outputPath": finalOutputURL.absoluteString,
           "startTime": (startTime * 1000).rounded(),
           "endTime": (endTime * 1000).rounded(),
-          "duration": (videoDuration * 1000).rounded()
+          "duration": (videoDuration * 1000).rounded(),
+          "openTrimmedVideo": openTrimmedVideo
         ]
         self.emitEventToJS("onFinishTrimming", eventData: eventPayload)
         

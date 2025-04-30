@@ -27,6 +27,7 @@ class VideoTrimmerViewController: UIViewController {
             if let _ = asset {
                 setupVideoTrimmer()
                 setupPlayerController()
+                setupShareButton()
                 setupTimeObserver()
                 updateLabels()
             }
@@ -37,9 +38,10 @@ class VideoTrimmerViewController: UIViewController {
     private var cancelButtonText = "Cancel"
     private var saveButtonText = "Save"
     var cancelBtnClicked: (() -> Void)?
-    var saveBtnClicked: ((CMTimeRange) -> Void)?
+    var shareBtnClicked: (() -> Void)?
+    var saveBtnClicked: ((CMTimeRange, Bool) -> Void)?
     private var enableHapticFeedback = true
-    
+    private var openTrimmedVideo = false
     private let playerController = AVPlayerViewController()
     private var trimmer: VideoTrimmer!
     private var timingStackView: UIStackView!
@@ -51,6 +53,7 @@ class VideoTrimmerViewController: UIViewController {
     private var playBtn: UIButton!
     private let loadingIndicator = UIActivityIndicatorView()
     private var saveBtn: UIButton!
+    private var shareButton: UIButton!
     private let playIcon = UIImage(systemName: "play.fill")
     private let pauseIcon = UIImage(systemName: "pause.fill")
     private let audioBannerView = UIImage(systemName: "airpodsmax")
@@ -141,17 +144,30 @@ class VideoTrimmerViewController: UIViewController {
         updateLabels()
         player.pause()
         setPlayBtnIcon()
+        validateSelectedRange()
     }
     
     private func handleProgressChanged(time: CMTime) {
         updateLabels()
         seek(to: time)
+        validateSelectedRange()
     }
     
     private func handleTrimmingEnd(_ start: Bool) {
         self.trimmer.progress = start ? trimmer.selectedRange.start : trimmer.selectedRange.end
         updateLabels()
         seek(to: trimmer.progress)
+        validateSelectedRange()
+    }
+
+    private func validateSelectedRange() -> Void {
+        if (trimmer.selectedRange.end - trimmer.selectedRange.start) < asset!.duration {
+            saveBtn.setTitle("Done", for: .normal)
+            openTrimmedVideo = true;
+        } else {
+             saveBtn.setTitle("Save", for: .normal)
+             openTrimmedVideo = false;
+        }
     }
     
     // MARK: - UIViewController
@@ -205,11 +221,15 @@ class VideoTrimmerViewController: UIViewController {
     }
     
     @objc private func onSaveBtnClicked() {
-        saveBtnClicked?(trimmer.selectedRange)
+        saveBtnClicked?(trimmer.selectedRange, openTrimmedVideo)
     }
     
     @objc private func onCancelBtnClicked() {
         cancelBtnClicked?()
+    }
+
+    @objc private func shareButtonClicked() {
+        shareBtnClicked?()
     }
     
     // MARK: - Setup Methods
@@ -274,6 +294,24 @@ class VideoTrimmerViewController: UIViewController {
         
         loadingIndicator.startAnimating()
     }
+
+    private func setupShareButton() {
+        // Create the share button
+        shareButton = UIButton(type: .system)
+        shareButton.setTitle("Share", for: .normal) // Replace with an icon if needed
+        shareButton.setTitleColor(.systemBlue, for: .normal) // Adjust styling
+        shareButton.addTarget(self, action: #selector(shareButtonClicked), for: .touchUpInside)
+        
+        // Add the button to the view
+        view.addSubview(shareButton)
+        view.bringSubviewToFront(shareButton)
+        // Set constraints for the top-right position
+        shareButton.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            shareButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            shareButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10)
+        ])
+    }
     
     private func setupTimeLabels() {
         leadingTrimLabel = UILabel.createLabel(textAlignment: .left, textColor: .white)
@@ -302,6 +340,8 @@ class VideoTrimmerViewController: UIViewController {
         trimmer.asset = asset
         trimmer.minimumDuration = CMTime(seconds: 1, preferredTimescale: 600)
         trimmer.enableHapticFeedback = enableHapticFeedback
+        trimmer.leadingGrabberHidden = true
+        trimmer.trailingGrabberHidden = true
         
         if let maxDuration = maximumDuration {
             trimmer.maximumDuration = CMTime(seconds: max(1, Double(maxDuration)), preferredTimescale: 600)

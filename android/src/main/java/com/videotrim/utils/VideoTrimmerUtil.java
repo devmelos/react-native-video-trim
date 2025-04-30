@@ -59,7 +59,7 @@ public class VideoTrimmerUtil {
     }
   }
 
-  public static TrimSession trim(String inputFile, String outputFile, int videoDuration, long startMs, long endMs, final VideoTrimListener callback, float progressUpdateInterval) {
+  public static TrimSession trim(String inputFile, String outputFile, int videoDuration, long startMs, long endMs, final VideoTrimListener callback, float progressUpdateInterval, boolean openTrimmedVideo) {
     // Start trimming in a background thread
     Thread trimThread = new Thread(() -> {
       MediaExtractor extractor = null;
@@ -207,7 +207,7 @@ public class VideoTrimmerUtil {
 
         if (session.isActive()) {
           muxer.stop();
-          callback.onFinishTrim(outputFile, startMs, endMs, videoDuration);
+          callback.onFinishTrim(outputFile, startMs, endMs, videoDuration, openTrimmedVideo);
         } else {
           callback.onCancelTrim();
         }

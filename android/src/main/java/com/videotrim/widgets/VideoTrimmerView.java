@@ -68,6 +68,10 @@ public class VideoTrimmerView extends FrameLayout implements IVideoTrimmerView {
   private long mMaxDuration = (long) Double.POSITIVE_INFINITY;
   private long mMinDuration = VideoTrimmerUtil.MIN_SHOOT_DURATION;
 
+  private TextView tv;
+  private TextView shareBtn;
+  private boolean openTrimmedVideo = false;
+
   private final Handler mTimingHandler = new Handler();
   private Runnable mTimingRunnable;
   private static final long TIMING_UPDATE_INTERVAL = 30; // Update every 30 milliseconds
@@ -164,6 +168,8 @@ public class VideoTrimmerView extends FrameLayout implements IVideoTrimmerView {
 
     headerView = findViewById(R.id.headerView);
     headerText = findViewById(R.id.headerText);
+    tv = findViewById(R.id.saveBtn);  
+    shareBtn = findViewById(R.id.shareBtn);
   }
 
   public void initByURI(final Uri videoURI) {
@@ -361,6 +367,9 @@ public class VideoTrimmerView extends FrameLayout implements IVideoTrimmerView {
     cancelBtn.setOnClickListener(view -> mOnTrimVideoListener.onCancel());
     saveBtn.setOnClickListener(view -> mOnTrimVideoListener.onSave());
     mPlayView.setOnClickListener(view -> playOrPause());
+    shareBtn.setOnClickListener(view -> {
+      mOnTrimVideoListener.onShare();
+    });
     setHandleTouchListener(leadingHandle, true);
     setHandleTouchListener(trailingHandle, false);
   }
@@ -374,7 +383,8 @@ public class VideoTrimmerView extends FrameLayout implements IVideoTrimmerView {
       startTime,
       endTime,
       mOnTrimVideoListener,
-      progressUpdateInterval
+      progressUpdateInterval,
+      openTrimmedVideo
     );
   }
 
@@ -737,6 +747,14 @@ public class VideoTrimmerView extends FrameLayout implements IVideoTrimmerView {
           break;
         default:
           return false;
+      }
+      long selectedDuration = endTime - startTime;
+      if (selectedDuration < mDuration) {
+        tv.setText("Done");
+        openTrimmedVideo = true;
+      } else {
+        tv.setText("Save");
+        openTrimmedVideo = false;
       }
       return true;
     });

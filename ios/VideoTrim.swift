@@ -177,7 +177,7 @@ class VideoTrim: RCTEventEmitter, AssetLoaderDelegate, UIDocumentPickerDelegate 
         }
       }
       
-      vc.saveBtnClicked = {(selectedRange: CMTimeRange, , openTrimmedVideo: Bool) in
+      vc.saveBtnClicked = {(selectedRange: CMTimeRange, openTrimmedVideo: Bool) in
         if !self.enableSaveDialog {
           self.trim(viewController: vc,inputFile: destPath, videoDuration: self.vc!.asset!.duration.seconds, startTime: selectedRange.start.seconds, endTime: selectedRange.end.seconds, openTrimmedVideo:openTrimmedVideo)
           return

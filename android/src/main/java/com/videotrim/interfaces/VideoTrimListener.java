@@ -12,4 +12,5 @@ public interface VideoTrimListener {
   void onCancel();
   void onSave();
   void onStatistics(WritableMap statistics);
+  void onShare();
 }

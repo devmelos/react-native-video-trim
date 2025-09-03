@@ -31,6 +31,9 @@ import android.widget.TextView;
 import android.widget.VideoView;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
@@ -170,6 +173,12 @@ public class VideoTrimmerView extends FrameLayout implements IVideoTrimmerView {
     headerText = findViewById(R.id.headerText);
     tv = findViewById(R.id.saveBtn);  
     shareBtn = findViewById(R.id.shareBtn);
+    View bottomControlsContainer = findViewById(R.id.layout);
+    ViewCompat.setOnApplyWindowInsetsListener(bottomControlsContainer, (v, windowInsets) -> {
+      Insets systemBarInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+      v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBarInsets.bottom);
+      return windowInsets;
+    });
   }
 
   public void initByURI(final Uri videoURI) {

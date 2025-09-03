@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -15,6 +16,8 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -25,6 +28,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
@@ -59,6 +64,9 @@ import iknow.android.utils.BaseUtils;
 @ReactModule(name = VideoTrimModule.NAME)
 public class VideoTrimModule extends ReactContextBaseJavaModule implements VideoTrimListener, LifecycleEventListener {
   private static final String TAG = VideoTrimmerUtil.class.getSimpleName();
+
+  private static final int LightNavigationBarColor = Color.argb(0xe6, 0xFF, 0xFF, 0xFF);
+  private static final int DarkNavigationBarColor = Color.argb(0x80, 0x1b, 0x1b, 0x1b);
 
   public static final String NAME = "VideoTrim";
   private static Boolean isInit = false;
@@ -214,6 +222,8 @@ public class VideoTrimModule extends ReactContextBaseJavaModule implements Video
       AlertDialog.Builder builder = new AlertDialog.Builder(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
       builder.setCancelable(false);
       alertDialog = builder.create();
+      Window window = alertDialog.getWindow();
+      enableEdgeToEdge(window);
       alertDialog.setView(trimmerView);
       alertDialog.show();
 
@@ -601,5 +611,41 @@ public class VideoTrimModule extends ReactContextBaseJavaModule implements Video
 
     // directly use context.startActivity(shareIntent) will cause crash
     getReactApplicationContext().getCurrentActivity().startActivity(Intent.createChooser(shareIntent, "Share file"));
+  }
+  private void enableEdgeToEdge(Window window) {
+    if (window == null) return;
+
+
+
+    Activity activity = getCurrentActivity();
+    if (activity == null) return;
+
+    boolean isDarkMode = (activity.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+
+    WindowCompat.setDecorFitsSystemWindows(window, false);
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      window.setStatusBarContrastEnforced(false);
+      window.setNavigationBarContrastEnforced(true);
+    }
+
+    window.setStatusBarColor(Color.TRANSPARENT);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      window.setNavigationBarColor(Color.TRANSPARENT);
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !isDarkMode) {
+      window.setNavigationBarColor(LightNavigationBarColor);
+    } else {
+      window.setNavigationBarColor(DarkNavigationBarColor);
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+      WindowManager.LayoutParams layoutParams = window.getAttributes();
+      layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+      window.setAttributes(layoutParams);
+    }
+
+    WindowInsetsControllerCompat insetsController = new WindowInsetsControllerCompat(window, window.getDecorView());
+    insetsController.setAppearanceLightStatusBars(!isDarkMode);
+    insetsController.setAppearanceLightNavigationBars(!isDarkMode);
   }
 }
